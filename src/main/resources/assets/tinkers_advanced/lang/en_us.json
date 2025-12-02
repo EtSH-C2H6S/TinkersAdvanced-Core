@@ -1,0 +1,13 @@
+{
+  "itemGroup.tinkers_advanced.tiac_misc": "Tinkers' Advanced | Misc",
+
+  "item.tinkers_advanced.ultra_dense_book": "The Ultra Dense Book",
+
+  "tooltip.tinkers_advanced.ultra_dense_book1": "A super dense book",
+  "tooltip.tinkers_advanced.ultra_dense_book2": "-Tinkers' Advanced // Guide Book-",
+
+  "tooltip.tinkers_advanced.material_story": "Press Shift to reveal more...",
+  "tooltip.tinkers_advanced.material_banned": "This material is not obtainable!",
+
+  "info.tinkers_advanced.hidden_material": "Hidden materials can't be crafted normally, That's why you can't find it's recipe.You need to hold shift and solve the puzzle given. If shift is not working, The material might be banned and you can never obtain it, sad :("
+}

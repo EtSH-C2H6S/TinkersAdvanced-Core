@@ -61,3 +61,15 @@ mandatory = true
 versionRange = "${minecraft_version_range}"
 ordering = "NONE"
 side = "BOTH"
+[[dependencies."${mod_id}"]]
+modId="etstlib"
+mandatory=true
+versionRange="${etstlib_version}"
+ordering="NONE"
+side="BOTH"
+[[dependencies."${mod_id}"]]
+modId="tconstruct"
+mandatory=true
+versionRange="[${tcon_version},)"
+ordering="AFTER"
+side="BOTH"

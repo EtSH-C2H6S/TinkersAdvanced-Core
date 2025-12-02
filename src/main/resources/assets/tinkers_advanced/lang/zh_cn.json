@@ -4,5 +4,10 @@
   "item.tinkers_advanced.ultra_dense_book": "超致密书",
 
   "tooltip.tinkers_advanced.ultra_dense_book1": "是一本超级致密的书，还是一本由超致密制成的书？",
-  "tooltip.tinkers_advanced.ultra_dense_book2": "-前沿匠艺 指导书-"
+  "tooltip.tinkers_advanced.ultra_dense_book2": "-前沿匠艺 指导书-",
+
+  "tooltip.tinkers_advanced.material_story": "按下Shift键，聆听材料故事",
+  "info.tinkers_advanced.hidden_material": "找不到这个材料的合成方式？没错，这是个隐藏材料。隐藏材料或其原料通常不以常规手段合成，这也是为什么你看不到它的配方。你需要对隐藏材料按shift来查看合成方法的提示，然后猜测合成方式。尽管隐藏材料部件配方被隐藏了，但是它们确实是可合成的，请尝试浇筑或放在部件制作台上。如果查看不了合成提示，则这个隐藏材料可能被禁用了，你永远也获得不了它 :(",
+
+  "tooltip.tinkers_advanced.material_banned": "此材料已被禁用！"
 }
