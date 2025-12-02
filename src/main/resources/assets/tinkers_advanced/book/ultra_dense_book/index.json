@@ -1,0 +1,9 @@
+[
+  {
+    "name": "intro",
+    "data": "sections/intro.json",
+    "icon": {
+      "item": "tinkers_advanced:ultra_dense_book"
+    }
+  }
+]

@@ -1,0 +1,21 @@
+{
+  "title": "Tinkers' Advanced-Mods",
+  "text": [
+    {
+      "text": "To better suit the different usage, Tinkers' Advanced had split into serval mods."
+    },
+    {
+      "text": "\n• Tinkers' Advanced-Core (TiAcCr) : Needed library for other TiAc Addons.",
+      "paragraph": true
+    },
+    {
+      "text": "\n• Tinkers' Advanced-Material (TiAcMe) : Includes materials and compat."
+    },
+    {
+      "text": "\n• Tinkers' Advanced-Tool (TiAcT) : Includes advanced-looking tools."
+    },
+    {
+      "text": "\n• Tinkers' Advanced-Utilities (TiAcU) : Includes useful gadgets."
+    }
+  ]
+}
