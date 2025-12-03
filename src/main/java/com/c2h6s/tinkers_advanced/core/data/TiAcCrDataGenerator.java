@@ -18,6 +18,7 @@ public class TiAcCrDataGenerator {
         ExistingFileHelper helper=event.getExistingFileHelper();
 
         generator.addProvider(event.includeClient(),new TiAcCrItemModelProvider(output,helper));
+        generator.addProvider(event.includeClient(),new TiAcCrRecipeProvider(output));
     }
 }
 

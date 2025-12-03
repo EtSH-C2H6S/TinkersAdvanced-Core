@@ -27,33 +27,33 @@ public class TiAcCrItem {
     protected static Map<String, List<RegistryObject<Item>>> LIST_MATERIAL_ITEM_MODEL =new HashMap<>();
     protected static Map<String, List<RegistryObject<Item>>> LIST_MISC_ITEM_MODEL =new HashMap<>();
     public static List<RegistryObject<Item>> getListMisc(String modId){
-        return List.copyOf(LIST_MISC.get(modId));
+        return List.copyOf(LIST_MISC.getOrDefault(modId,new ArrayList<>()));
     }
     public static List<RegistryObject<Item>> getListMaterial(String modId){
-        return List.copyOf(LIST_MATERIAL.get(modId));
+        return List.copyOf(LIST_MATERIAL.getOrDefault(modId,new ArrayList<>()));
     }
     public static List<RegistryObject<Item>> getListTool(String modId){
-        return List.copyOf(LIST_TOOL.get(modId));
+        return List.copyOf(LIST_TOOL.getOrDefault(modId,new ArrayList<>()));
     }
     public static List<RegistryObject<Item>> getListMaterialItemModel(String modId){
-        return List.copyOf(LIST_MATERIAL_ITEM_MODEL.get(modId));
+        return List.copyOf(LIST_MATERIAL_ITEM_MODEL.getOrDefault(modId,new ArrayList<>()));
     }
     public static List<RegistryObject<Item>> getListMiscItemModel(String modId){
-        return List.copyOf(LIST_MISC_ITEM_MODEL.get(modId));
+        return List.copyOf(LIST_MISC_ITEM_MODEL.getOrDefault(modId,new ArrayList<>()));
     }
     public static List<RegistryObject<BlockItem>> getListMiscBlock(String modId){
-        return List.copyOf(LIST_MISC_BLOCK.get(modId));
+        return List.copyOf(LIST_MISC_BLOCK.getOrDefault(modId,new ArrayList<>()));
     }
 
     public static List<RegistryObject<Item>> getListSimpleMaterialModel(String modId){
-        return List.copyOf(LIST_MATERIAL_ITEM_MODEL.get(modId));
+        return List.copyOf(LIST_MATERIAL_ITEM_MODEL.getOrDefault(modId,new ArrayList<>()));
     }
     public static List<RegistryObject<Item>> getListSimpleMiscModel(String modId){
-        return List.copyOf(LIST_MISC_ITEM_MODEL.get(modId));
+        return List.copyOf(LIST_MISC_ITEM_MODEL.getOrDefault(modId,new ArrayList<>()));
     }
 
     public static List<RegistryObject<BlockItem>> getListSimpleBlock(String modId){
-        return List.copyOf(LIST_SIMPLE_BLOCK.get(modId));
+        return List.copyOf(LIST_SIMPLE_BLOCK.getOrDefault(modId,new ArrayList<>()));
     }
 
     public static <T> void putOrCreateList(Map<String, List<RegistryObject<T>>> map,String modId,RegistryObject<T> object){

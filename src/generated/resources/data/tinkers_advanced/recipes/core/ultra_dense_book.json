@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "minecraft:book"
+    },
+    {
+      "item": "tconstruct:obsidian_pane"
+    },
+    {
+      "tag": "forge:dyes/purple"
+    }
+  ],
+  "result": {
+    "item": "tinkers_advanced:ultra_dense_book"
+  }
+}

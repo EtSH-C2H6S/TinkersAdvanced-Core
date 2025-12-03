@@ -1,10 +1,14 @@
 package com.c2h6s.tinkers_advanced.core.library.registry;
 
 import com.c2h6s.tinkers_advanced.TinkersAdvanced;
+import com.c2h6s.tinkers_advanced.core.data.condition.CompatConfigCondition;
 import com.c2h6s.tinkers_advanced.core.init.TiAcCrConditions;
 import com.c2h6s.tinkers_advanced.core.library.data.MaterialModifiersObject;
 import com.c2h6s.tinkers_advanced.core.library.data.MaterialStatsObject;
+import com.google.common.collect.ImmutableSet;
+import com.google.errorprone.annotations.CheckReturnValue;
 import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
@@ -37,8 +41,14 @@ import slimeknights.mantle.registration.deferred.FluidDeferredRegister;
 import slimeknights.mantle.registration.object.FluidObject;
 import slimeknights.mantle.registration.object.ItemObject;
 import slimeknights.tconstruct.common.registration.CastItemObject;
+import slimeknights.tconstruct.library.client.data.material.AbstractMaterialSpriteProvider;
+import slimeknights.tconstruct.library.client.data.spritetransformer.IColorMapping;
+import slimeknights.tconstruct.library.client.data.spritetransformer.ISpriteTransformer;
+import slimeknights.tconstruct.library.client.data.spritetransformer.RecolorSpriteTransformer;
+import slimeknights.tconstruct.library.client.materials.MaterialRenderInfo;
 import slimeknights.tconstruct.library.materials.definition.MaterialId;
 import slimeknights.tconstruct.library.materials.stats.IMaterialStats;
+import slimeknights.tconstruct.library.materials.stats.MaterialStatType;
 import slimeknights.tconstruct.library.materials.stats.MaterialStatsId;
 import slimeknights.tconstruct.library.modifiers.ModifierEntry;
 import slimeknights.tconstruct.library.recipe.alloying.AlloyRecipeBuilder;
@@ -48,7 +58,8 @@ import slimeknights.tconstruct.library.recipe.material.MaterialRecipeBuilder;
 import slimeknights.tconstruct.library.recipe.melting.MaterialMeltingRecipeBuilder;
 import slimeknights.tconstruct.library.recipe.melting.MeltingRecipeBuilder;
 import slimeknights.tconstruct.smeltery.TinkerSmeltery;
-import slimeknights.tconstruct.tools.stats.PlatingMaterialStats;
+import slimeknights.tconstruct.tools.data.sprite.TinkerPartSpriteProvider;
+import slimeknights.tconstruct.tools.stats.*;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -61,7 +72,7 @@ import static slimeknights.tconstruct.fluids.block.BurningLiquidBlock.createBurn
 public class SimpleMaterialObject {
     public SimpleMaterialObject(String name, String nameSpace, @Nullable FluidObject<? extends ForgeFlowingFluid> fluidObject, boolean isUnit,
                                 @Nullable ItemObject<? extends Item> itemObject, MaterialInfo materialInfo, ICondition condition,
-                                boolean isSimpleModel) {
+                                boolean isSimpleModel, MaterialRenderInfo renderInfo, MaterialSpriteInfo spriteInfo) {
         this.name = name;
         this.nameSpace = nameSpace;
         this.fluidObject = fluidObject;
@@ -70,6 +81,8 @@ public class SimpleMaterialObject {
         this.condition = condition;
         this.isUnit = isUnit;
         this.isSimpleModel = isSimpleModel;
+        this.renderInfo = renderInfo;
+        this.spriteInfo = spriteInfo;
     }
 
     @Getter
@@ -77,7 +90,7 @@ public class SimpleMaterialObject {
     @Getter
     private final String nameSpace;
     @Getter
-    private boolean isSimpleModel;
+    private final boolean isSimpleModel;
 
     //常量
     public final ResourceLocation baseFolder(){
@@ -100,13 +113,18 @@ public class SimpleMaterialObject {
     @Getter
     private @Nullable ICondition condition;
     @Getter
-    private boolean isUnit;
+    private final boolean isUnit;
     @Getter
     private MaterialRecipeInfo recipeInfo;
 
     //材料相关
     @Getter
     private final MaterialInfo materialInfo;
+    @Getter
+    private final MaterialRenderInfo renderInfo;
+    @Getter
+    private final MaterialSpriteInfo spriteInfo;
+
 
 
     public void assembleRecipes(Consumer<FinishedRecipe> consumer, IRecipeHelper helper){
@@ -280,6 +298,149 @@ public class SimpleMaterialObject {
             }
         }
     }
+    public static class MaterialSpriteInfo {
+        private static final String[] EMPTY_STRING_ARRAY = new String[0];
+        private final ResourceLocation texture;
+        private String[] fallbacks = EMPTY_STRING_ARRAY;
+        private final ImmutableSet.Builder<MaterialStatsId> statTypes = ImmutableSet.builder();
+        private final Builder parent;
+        @Setter
+        @Nullable
+        private ISpriteTransformer transformer;
+        @Setter
+        private boolean variant = false;
+
+        public MaterialSpriteInfo(ResourceLocation texture, Builder parent) {
+            this.texture = texture;
+            this.parent = parent;
+        }
+
+        public MaterialSpriteInfo fallbacks(String... fallbacks) {
+            this.fallbacks = fallbacks;
+            return this;
+        }
+
+        public MaterialSpriteInfo colorMapper(IColorMapping mapping) {
+            this.setTransformer(new RecolorSpriteTransformer(mapping));
+            return this;
+        }
+
+        public MaterialSpriteInfo variant() {
+            this.setVariant(true);
+            return this;
+        }
+
+        public MaterialSpriteInfo statType(MaterialStatsId statsId) {
+            statTypes.add(statsId);
+            return this;
+        }
+
+        public MaterialSpriteInfo statType(MaterialStatsId... statsId) {
+            statTypes.add(statsId);
+            return this;
+        }
+
+        public MaterialSpriteInfo statType(IMaterialStats... stats) {
+            for (IMaterialStats stat : stats) {
+                statTypes.add(stat.getIdentifier());
+            }
+            return this;
+        }
+
+        public MaterialSpriteInfo statType(MaterialStatType<?>... stats) {
+            for (MaterialStatType<?> stat : stats) {
+                statTypes.add(stat.getId());
+            }
+            return this;
+        }
+
+        public MaterialSpriteInfo statType(List<? extends MaterialStatType<?>> stats) {
+            for (MaterialStatType<?> stat : stats) {
+                statTypes.add(stat.getId());
+            }
+            return this;
+        }
+
+        public MaterialSpriteInfo repairKit() {
+            return statType(StatlessMaterialStats.REPAIR_KIT.getIdentifier());
+        }
+
+        public MaterialSpriteInfo meleeHarvest() {
+            statType(HeadMaterialStats.ID);
+            statType(HandleMaterialStats.ID);
+            statType(StatlessMaterialStats.BINDING.getIdentifier());
+            repairKit();
+            return this;
+        }
+
+        public MaterialSpriteInfo ranged() {
+            statType(LimbMaterialStats.ID);
+            statType(GripMaterialStats.ID);
+            repairKit();
+            return this;
+        }
+
+        public MaterialSpriteInfo maille() {
+            statType(StatlessMaterialStats.MAILLE.getIdentifier());
+            statType(TinkerPartSpriteProvider.ARMOR_MAILLE);
+            return this;
+        }
+
+        public MaterialSpriteInfo cuirass() {
+            statType(StatlessMaterialStats.CUIRASS.getIdentifier());
+            statType(TinkerPartSpriteProvider.ARMOR_CUIRASS);
+            repairKit(); // used by traveler's gear
+            return this;
+        }
+
+        public MaterialSpriteInfo plating() {
+            statType(TinkerPartSpriteProvider.ARMOR_PLATING);
+            for (MaterialStatType<?> type : PlatingMaterialStats.TYPES) {
+                statType(type.getId());
+            }
+            repairKit();
+            return this;
+        }
+
+        public MaterialSpriteInfo armor() {
+            plating();
+            maille();
+            return this;
+        }
+
+        public MaterialSpriteInfo shieldCore() {
+            statType(StatlessMaterialStats.SHIELD_CORE);
+            repairKit(); // used by traveler's shields
+            return this;
+        }
+
+        public MaterialSpriteInfo arrowHead() {
+            statType(StatlessMaterialStats.ARROW_HEAD);
+            return this;
+        }
+
+        public MaterialSpriteInfo arrowShaft() {
+            statType(StatlessMaterialStats.ARROW_SHAFT);
+            return this;
+        }
+
+        public MaterialSpriteInfo fletching() {
+            statType(StatlessMaterialStats.FLETCHING);
+            return this;
+        }
+
+        private Builder build() {
+            if (transformer == null) {
+                throw new IllegalStateException("Material must have a transformer for a sprite provider");
+            }
+            Set<MaterialStatsId> supportedStats = this.statTypes.build();
+            if (supportedStats.isEmpty()) {
+                throw new IllegalStateException("Material must support at least one stat type");
+            }
+            this.parent.spriteInfo = this;
+            return this.parent;
+        }
+    }
 
     //材料配方相关
     public static class MaterialRecipeInfo{
@@ -448,6 +609,8 @@ public class SimpleMaterialObject {
         String itemName;
         String fluidName;
         boolean isSimpleModel = true;
+        MaterialRenderInfo renderInfo;
+        MaterialSpriteInfo spriteInfo;
         Function<FluidDeferredRegister.Builder, FluidObject<? extends ForgeFlowingFluid>> fluidRegFunction;
         public Builder(String nameSpace,String name,SimpleMaterialWrappedRegister register){
             this.name = name;
@@ -467,18 +630,19 @@ public class SimpleMaterialObject {
             this.itemName = name+"_ingot";
             return this;
         }
-        public Builder addCompatModId(String modId){
+        public Builder noCompat(){
+            this.conditions.clear();
+            this.conditions.add(new CompatConfigCondition(TinkersAdvanced.MODID,true));
+            return this.setOriginal(true);
+        }
+        public Builder addCompatModId(String modId,boolean isOriginal){
             this.compatModIds.add(modId);
             this.conditions.add(new ModLoadedCondition(modId));
-            if (isOriginal&&TiAcCrConditions.MODID_ORIGINAL_CONDITIONAL_MAP.get(modId)!=null){
-                conditions.add(TiAcCrConditions.MODID_ORIGINAL_CONDITIONAL_MAP.get(modId));
-            }
-            else if (TiAcCrConditions.MODID_CONDITIONAL_MAP.get(modId)!=null)
-                conditions.add(TiAcCrConditions.MODID_CONDITIONAL_MAP.get(modId));
-            return this;
+            this.conditions.add(new CompatConfigCondition(modId,isOriginal));
+            return this.setOriginal(isOriginal);
         }
-        public Builder setOriginal(){
-            this.isOriginal = true;
+        private Builder setOriginal(boolean b){
+            this.isOriginal = b;
             conditions.add(TiAcCrConditions.ALLOW_ORIGINAL_MATERIALS);
             return this;
         }
@@ -515,6 +679,13 @@ public class SimpleMaterialObject {
         public MaterialInfo.MaterialInfoBuilder buildMaterial(int tier,boolean isHidden,int sortOrder,boolean craftable){
             return new MaterialInfo.MaterialInfoBuilder(tier,isHidden,sortOrder,craftable,this);
         }
+        public MaterialSpriteInfo buildMaterialSprite(){
+            return new MaterialSpriteInfo(new MaterialId(nameSpace,name),this);
+        }
+        public Builder setRenderInfo(MaterialRenderInfo info){
+            this.renderInfo = info;
+            return this;
+        }
         public SimpleMaterialObject build(){
             SimpleMaterialObject object;
             if (this.itemName==null) this.itemName = name;
@@ -529,12 +700,12 @@ public class SimpleMaterialObject {
                 FluidObject<? extends ForgeFlowingFluid> fluidObj = null;
                     if (fluidRegFunction!=null) fluidObj = fluidRegFunction.apply(register.fluidRegister.register(fluidName));
                 object = new SimpleMaterialObject(this.name, this.nameSpace, fluidObj,this.isUnit, itemObj, materialInfo,
-                        new AndCondition(conditions.toArray(new ICondition[0])),this.isSimpleModel);
+                        new AndCondition(conditions.toArray(new ICondition[0])),this.isSimpleModel,this.renderInfo,this.spriteInfo);
                 register.entryMap.put(name,object);
                 return object;
             }
             object = new SimpleMaterialObject(this.name,this.nameSpace,null,this.isUnit,null,this.materialInfo,
-                    new AndCondition(conditions.toArray(new ICondition[0])),this.isSimpleModel);
+                    new AndCondition(conditions.toArray(new ICondition[0])),this.isSimpleModel,this.renderInfo,this.spriteInfo);
             register.entryMap.put(name,object);
             return object;
         }

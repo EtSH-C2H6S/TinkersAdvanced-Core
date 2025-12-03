@@ -4,6 +4,7 @@ import com.c2h6s.etstlib.content.misc.entityTicker.EntityTicker;
 import com.c2h6s.etstlib.content.register.EtSTLibRegistries;
 import com.c2h6s.tinkers_advanced.TinkersAdvanced;
 import com.c2h6s.tinkers_advanced.core.content.event.TiAcLoadRegistryClassEvent;
+import com.c2h6s.tinkers_advanced.core.data.condition.CompatConfigCondition;
 import com.c2h6s.tinkers_advanced.core.data.condition.ConfigCondition;
 import com.c2h6s.tinkers_advanced.core.init.TiAcCrConditions;
 import com.c2h6s.tinkers_advanced.core.init.TiAcCrItem;
@@ -62,6 +63,7 @@ public class TiAcCrModule {
         if (event.getRegistryKey()== Registries.RECIPE_SERIALIZER){
             TinkersAdvanced.LOGGER.info("TiAc on RegisterEvent");
             CraftingHelper.register(ConfigCondition.SERIALIZER);
+            CraftingHelper.register(CompatConfigCondition.SERIALIZER);
             TiAcCrConditions.init();
         }
     }

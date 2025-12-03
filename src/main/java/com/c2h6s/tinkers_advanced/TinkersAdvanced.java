@@ -1,6 +1,5 @@
 package com.c2h6s.tinkers_advanced;
 
-import com.c2h6s.tinkers_advanced.core.TiAcCrConfig;
 import com.c2h6s.tinkers_advanced.core.TiAcCrModule;
 import com.c2h6s.tinkers_advanced.core.content.entity.VisualScaledProjectile;
 import com.mojang.logging.LogUtils;

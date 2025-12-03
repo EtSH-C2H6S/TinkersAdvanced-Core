@@ -5,6 +5,9 @@ import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.List;
+import java.util.Objects;
+
 public class TiAcCrConfig {
 
     public static final ForgeConfigSpec commonSpec;
@@ -27,6 +30,9 @@ public class TiAcCrConfig {
     }
     public static class Common{
         public final ForgeConfigSpec.BooleanValue ALLOW_ORIGINAL_MATERIALS;
+        public final ForgeConfigSpec.ConfigValue<List<? extends String>> LIST_BLACKLIST_COMPAT;
+        public final ForgeConfigSpec.ConfigValue<List<? extends String>> LIST_BLACKLIST_COMPAT_ORIGINAL;
+//        public final ForgeConfigSpec.BooleanValue ALLOW_GIVE_BOOK;
 
         public Common(ForgeConfigSpec.Builder builder){
             builder.comment("***注意！").comment("***Notice")
@@ -34,8 +40,20 @@ public class TiAcCrConfig {
                     .comment("This configure won't affect language display. When a certain modifier or tool is configured, please manually replace the description of the relating language contents.");
             builder.comment("平衡性和游玩").push("Gameplay");
             ALLOW_ORIGINAL_MATERIALS = builder.comment("启用TiAc的原创材料，这些材料会有偏高的强度，默认true。")
+                    .comment("这是一个总控，用于进行全局开关。如果你想精准控制各种联动材料的开关请使用IntegrationModBL或OriginalCompatModBL。")
                     .comment("Toggle original materials (Slightly OP), true by default.")
                     .define("AllowOriginalMaterials",true);
+            LIST_BLACKLIST_COMPAT = builder.comment("集成型联动模组ID黑名单，向表中添加ModId来隐藏前沿匠艺对该模组的集成型联动。")
+                    .comment("黑名单模组对应的联动内容会被隐藏（不会加入创造模式物品栏，被JEI隐藏且配方不加载）。")
+                    .comment("Integration ModId blacklist.")
+                    .defineListAllowEmpty("IntegrationModBL", List.of("example_mod1","example_mod2"), Objects::nonNull);
+            LIST_BLACKLIST_COMPAT_ORIGINAL = builder.comment("原创型联动模组ID黑名单，向表中添加ModId来隐藏前沿匠艺对该模组的原创型联动（比如热力的活化彩钢）。")
+                    .comment("黑名单模组对应的联动内容会被隐藏（不会加入创造模式物品栏，被JEI隐藏且配方不加载）。")
+                    .comment("Original Compat ModId blacklist.")
+                    .defineListAllowEmpty("OriginalCompatModBL",List.of("example_mod1","example_mod2"), Objects::nonNull);
+//            ALLOW_GIVE_BOOK = builder.comment("在玩家进入游戏时给予前沿匠艺的指导书，默认true。")
+//                    .comment("Give player the Ultra Dense Book when spawn, true by default.")
+//                    .define("GiveTheUltraDenseBook",true);
             builder.pop();
         }
     }
