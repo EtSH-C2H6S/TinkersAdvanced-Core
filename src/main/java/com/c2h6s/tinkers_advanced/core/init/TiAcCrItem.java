@@ -66,7 +66,7 @@ public class TiAcCrItem {
         RegistryObject<Item> object = register.register(name,sup);
         putOrCreateList(LIST_MISC,modId,object);
         if (simpleModel){
-            putOrCreateList(LIST_MATERIAL_ITEM_MODEL,modId,object);
+            putOrCreateList(LIST_MISC_ITEM_MODEL,modId,object);
         }
         return object;
     }

@@ -16,6 +16,7 @@ public class CompatConfigCondition implements ICondition {
     private final String modId;
     private final boolean isOriginal;
     public static final IConditionSerializer<CompatConfigCondition> SERIALIZER = new CompatSerializer();
+    public static final ResourceLocation ID = TinkersAdvanced.getLocation("compat_enabled");
 
     public CompatConfigCondition(String modId, boolean isOriginal) {
         this.modId = modId;
@@ -24,7 +25,7 @@ public class CompatConfigCondition implements ICondition {
 
     @Override
     public ResourceLocation getID() {
-        return TinkersAdvanced.getLocation("compat_enabled");
+        return ID;
     }
 
     @Override
@@ -35,7 +36,7 @@ public class CompatConfigCondition implements ICondition {
     private static class CompatSerializer implements Serializer<CompatConfigCondition>, IConditionSerializer<CompatConfigCondition> {
         @Override
         public ResourceLocation getID() {
-            return ConfigCondition.ID;
+            return CompatConfigCondition.ID;
         }
 
         @Override

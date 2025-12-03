@@ -7,3 +7,6 @@ utilities.exchanger=Atom Exchanger
 utilities.hepatizon_casting_basin=Hepatizon Basin
 utilities.hepatizon_casting_table=Hepatizon Table
 utilities.hepatizon_faucet=Hepatizon Faucet
+special_modifiers=Special Modifiers
+special_modifiers.group_general=General
+special_modifiers.group_generator_modifier=Energy Modules

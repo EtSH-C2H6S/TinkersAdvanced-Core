@@ -222,6 +222,3 @@ tasks.named('jar', Jar).configure {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
 }
-mixin {
-    add sourceSets.main, "tinkers_advanced.refmap.json"
-}
