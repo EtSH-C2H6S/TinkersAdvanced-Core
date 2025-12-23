@@ -38,7 +38,6 @@ public class UltraDenseBookItem extends LecternBookItem {
         super(properties);
         ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
         builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(BASE_ATTACK_DAMAGE_UUID, "Weapon modifier", Integer.MIN_VALUE-3f, AttributeModifier.Operation.ADDITION));
-        builder.put(Attributes.ATTACK_SPEED, new AttributeModifier(BASE_ATTACK_SPEED_UUID, "Weapon modifier",Integer.MIN_VALUE-3f, AttributeModifier.Operation.ADDITION));
         this.attributes = builder.build();
     }
     @Override

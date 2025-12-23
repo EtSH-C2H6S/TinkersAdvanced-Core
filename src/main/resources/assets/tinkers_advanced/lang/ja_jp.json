@@ -1,0 +1,19 @@
+{
+  "itemGroup.tinkers_advanced.tiac_misc": "Tinkers' Advanced その他",
+
+
+  "tooltip.tinkers_advanced.material_story": "Shiftキーで詳細を表示…",
+  "tooltip.tinkers_advanced.material_banned": "この素材は入手不可能です！",
+  "info.tinkers_advanced.hidden_material": "隠された素材は通常の方法ではクラフトできません。そのためレシピが見つからないのです。Shiftキーを押しながら、与えられた謎を解く必要があります。Shiftキーが機能しない場合、その素材は入手が禁止されている可能性があり、二度と手に入れることはできません。残念 :(",
+
+  "item.tinkers_advanced.ultra_dense_book": "超高密度の本",
+  "tooltip.tinkers_advanced.ultra_dense_book1": "超高密度の本か、それとも超高密度によって作られた本か？誰も知らない。",
+  "tooltip.tinkers_advanced.ultra_dense_book2": "- Tinkers' Advanced ガイドブック -",
+
+  "tooltip.tinkers_advanced.energy": "最大エネルギー: ",
+  "tooltip.tinkers_advanced.power_multiplier": "出力倍率: ",
+  "tool_stat.tinkers_advanced.flux_core.capacity_factor.description": "基本容量に乗算される最大エネルギーの倍率。",
+  "tool_stat.tinkers_advanced.flux_core.generate_factor.description": "エネルギーモジュール特性の生成/消費率。",
+  "tool_stat.tinkers_advanced.capacity_factor": "最大エネルギー",
+  "tool_stat.tinkers_advanced.generate_factor": "出力倍率"
+}

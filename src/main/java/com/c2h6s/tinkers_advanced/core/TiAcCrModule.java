@@ -6,10 +6,7 @@ import com.c2h6s.tinkers_advanced.TinkersAdvanced;
 import com.c2h6s.tinkers_advanced.core.content.event.TiAcLoadRegistryClassEvent;
 import com.c2h6s.tinkers_advanced.core.data.condition.CompatConfigCondition;
 import com.c2h6s.tinkers_advanced.core.data.condition.ConfigCondition;
-import com.c2h6s.tinkers_advanced.core.init.TiAcCrConditions;
-import com.c2h6s.tinkers_advanced.core.init.TiAcCrItem;
-import com.c2h6s.tinkers_advanced.core.init.TiAcCrParticleTypes;
-import com.c2h6s.tinkers_advanced.core.init.TiAcCrTabs;
+import com.c2h6s.tinkers_advanced.core.init.*;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.inventory.MenuType;
@@ -56,7 +53,7 @@ public class TiAcCrModule {
     }
     @SubscribeEvent
     public static void onCommonSetup(FMLCommonSetupEvent event){
-
+        event.enqueueWork(TiAcCrMaterialStat::init);
     }
     @SubscribeEvent
     public static void onRegister(RegisterEvent event){

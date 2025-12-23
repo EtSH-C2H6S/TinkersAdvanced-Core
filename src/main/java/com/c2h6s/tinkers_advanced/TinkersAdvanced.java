@@ -2,6 +2,7 @@ package com.c2h6s.tinkers_advanced;
 
 import com.c2h6s.tinkers_advanced.core.TiAcCrModule;
 import com.c2h6s.tinkers_advanced.core.content.entity.VisualScaledProjectile;
+import com.c2h6s.tinkers_advanced.core.network.TiAcCrPacketHandler;
 import com.mojang.logging.LogUtils;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
@@ -32,7 +33,7 @@ public class TinkersAdvanced
 
         TiAcCrConfig.init();
         TiAcCrModule.register(modEventBus);
-
+        TiAcCrPacketHandler.init();
         MinecraftForge.EVENT_BUS.register(this);
     }
 

@@ -10,6 +10,7 @@ import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.FORGE,modid = TinkersAdvanced.MODID)
@@ -21,9 +22,19 @@ public class PlayerEventHandler {
             event.getToolTip().add(Component.translatable("tooltip.tinkers_advanced.ultra_dense_book2").withStyle(ChatFormatting.LIGHT_PURPLE));
         }
         if (event.getItemStack().getItem() instanceof IHiddenMaterial iHiddenMaterial){
-            var originalList = List.copyOf(event.getToolTip());
+            var originalList =new ArrayList<>( List.copyOf(event.getToolTip()));
+            try {
+                originalList.remove(0);
+            } catch (Exception ignored){}
             var tooltip = event.getToolTip();
+            Component name;
+            try {
+                name = tooltip.get(0);
+            } catch (Exception ignored){
+                name = null;
+            }
             tooltip.clear();
+            if (name!=null) tooltip.add(name);
             if (iHiddenMaterial.getConfig()!=null&&!iHiddenMaterial.getConfig().get()){
                 tooltip.add(Component.translatable("tooltip.tinkers_advanced.material_banned").withStyle(ChatFormatting.RED));
             }

@@ -9,5 +9,20 @@
   "tooltip.tinkers_advanced.material_story": "按下Shift键，聆听材料故事",
   "info.tinkers_advanced.hidden_material": "找不到这个材料的合成方式？没错，这是个隐藏材料。隐藏材料或其原料通常不以常规手段合成，这也是为什么你看不到它的配方。你需要对隐藏材料按shift来查看合成方法的提示，然后猜测合成方式。尽管隐藏材料部件配方被隐藏了，但是它们确实是可合成的，请尝试浇筑或放在部件制作台上。如果查看不了合成提示，则这个隐藏材料可能被禁用了，你永远也获得不了它 :(",
 
-  "tooltip.tinkers_advanced.material_banned": "此材料已被禁用！"
+  "tooltip.tinkers_advanced.material_banned": "此材料已被禁用！",
+
+  "tooltip.tinkers_advanced.energy": "最大能量",
+  "tooltip.tinkers_advanced.power_multiplier": "产出倍率",
+  "tool_stat.tinkers_advanced.flux_core.capacity_factor.description": "能量容量的倍率，会乘以工具的能量容量。",
+  "tool_stat.tinkers_advanced.flux_core.generate_factor.description": "能量模块类词条产能/耗能的倍率，消耗/产出的原料也会相应增加。",
+  "tool_stat.tinkers_advanced.capacity_factor": "最大能量：",
+  "tool_stat.tinkers_advanced.generate_factor": "产出倍率：",
+
+  "modifier.tinkers_advanced.plasma_proof_goggles": "防等离子目镜",
+  "modifier.tinkers_advanced.plasma_proof_goggles.flavor": "戴上它就能在熔岩里游泳了？",
+  "modifier.tinkers_advanced.plasma_proof_goggles.description": "戴在头上时移除流体的迷雾效果和火焰及方块的屏幕效果。",
+
+  "modifier.tinkers_advanced.auto_shoot": "自动蓄力",
+  "modifier.tinkers_advanced.auto_shoot.flavor": "我的连发机枪呢？",
+  "modifier.tinkers_advanced.auto_shoot.description": "右键蓄力时，自动在满蓄力后取消蓄力。"
 }

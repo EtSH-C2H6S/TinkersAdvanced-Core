@@ -6,7 +6,6 @@ import com.c2h6s.tinkers_advanced.core.init.TiAcCrConditions;
 import com.c2h6s.tinkers_advanced.core.library.data.MaterialModifiersObject;
 import com.c2h6s.tinkers_advanced.core.library.data.MaterialStatsObject;
 import com.google.common.collect.ImmutableSet;
-import com.google.errorprone.annotations.CheckReturnValue;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.data.recipes.FinishedRecipe;
@@ -33,6 +32,7 @@ import net.minecraftforge.registries.RegistryObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import oshi.util.tuples.Pair;
+import slimeknights.mantle.recipe.data.AbstractRecipeBuilder;
 import slimeknights.mantle.recipe.data.IRecipeHelper;
 import slimeknights.mantle.recipe.helper.FluidOutput;
 import slimeknights.mantle.recipe.helper.ItemOutput;
@@ -40,13 +40,14 @@ import slimeknights.mantle.recipe.ingredient.FluidIngredient;
 import slimeknights.mantle.registration.deferred.FluidDeferredRegister;
 import slimeknights.mantle.registration.object.FluidObject;
 import slimeknights.mantle.registration.object.ItemObject;
+import slimeknights.tconstruct.common.TinkerTags;
 import slimeknights.tconstruct.common.registration.CastItemObject;
-import slimeknights.tconstruct.library.client.data.material.AbstractMaterialSpriteProvider;
 import slimeknights.tconstruct.library.client.data.spritetransformer.IColorMapping;
 import slimeknights.tconstruct.library.client.data.spritetransformer.ISpriteTransformer;
 import slimeknights.tconstruct.library.client.data.spritetransformer.RecolorSpriteTransformer;
 import slimeknights.tconstruct.library.client.materials.MaterialRenderInfo;
 import slimeknights.tconstruct.library.materials.definition.MaterialId;
+import slimeknights.tconstruct.library.materials.definition.MaterialVariantId;
 import slimeknights.tconstruct.library.materials.stats.IMaterialStats;
 import slimeknights.tconstruct.library.materials.stats.MaterialStatType;
 import slimeknights.tconstruct.library.materials.stats.MaterialStatsId;
@@ -107,6 +108,8 @@ public class SimpleMaterialObject {
     @Getter
     private final @Nullable FluidObject<? extends ForgeFlowingFluid> fluidObject;
     @Getter
+    private boolean isFluidTextureCustom = false;
+    @Getter
     private final @Nullable ItemObject<? extends Item> itemObject;
 
     //配方相关
@@ -131,7 +134,7 @@ public class SimpleMaterialObject {
         if (this.recipeInfo==null) return;
         Consumer<FinishedRecipe> withCondition = helper.withCondition(consumer,condition);
         if (recipeInfo.hasMolten()&&recipeInfo.hasItem()){
-            MeltingRecipeBuilder.melting(recipeInfo.getItemIng(), recipeInfo.getFluidOutput(),recipeInfo.getMeltTemp(),1)
+            MeltingRecipeBuilder.melting(recipeInfo.getItemIng(), recipeInfo.getFluidOutput(),recipeInfo.getMeltTemp(),1f)
                     .save(withCondition,new ResourceLocation(getFolder()+"_melting_"+recipeInfo.getFluidAmount()+"mb"));
             recipeInfo.getCastItemOptional().ifPresentOrElse(castItemObject -> {
 
@@ -167,6 +170,12 @@ public class SimpleMaterialObject {
             }
             builder.save(withCondition,
                     new ResourceLocation(getFolder() + "_material_" + recipeInfo.getMaterialValue() + recipeInfo.getRequiredValue()));
+            int id = 1;
+            for (var materialRecipe:recipeInfo.extraMaterials){
+                materialRecipe.save(withCondition,
+                        new ResourceLocation(getFolder() + "_material_extra_" + id));
+                id++;
+            }
         }
         for (int i =0;i<recipeInfo.alloyRecipes.size();i++){
             var alloyRecipeBuilder = recipeInfo.alloyRecipes.get(i);
@@ -186,9 +195,16 @@ public class SimpleMaterialObject {
         return new MaterialRecipeInfo.MaterialRecipeInfoBuilder(this);
     }
 
+    public SimpleMaterialObject setFluidCustomTexture(){
+        this.isFluidTextureCustom = true;
+        return this;
+    }
+
 
     //材料相关
     public static class MaterialInfo{
+        @Getter
+        private final boolean excludeFromTool;
         @Getter
         private final int tier;
         @Getter
@@ -206,7 +222,8 @@ public class SimpleMaterialObject {
         @Getter
         private final String compatModId;
 
-        public MaterialInfo(int tier, boolean isHidden, int sortOrder, boolean craftable, MaterialStatsObject stats, MaterialModifiersObject modifiers, boolean isOriginal, String compatModId) {
+        public MaterialInfo(boolean excludeFromTool, int tier, boolean isHidden, int sortOrder, boolean craftable, MaterialStatsObject stats, MaterialModifiersObject modifiers, boolean isOriginal, String compatModId) {
+            this.excludeFromTool = excludeFromTool;
             this.tier = tier;
             this.isHidden = isHidden;
             this.sortOrder = sortOrder;
@@ -226,6 +243,7 @@ public class SimpleMaterialObject {
             MaterialModifiersObject modifiers;
             boolean isOriginal;
             String compatModId;
+            boolean excludeFromTool = false;
             public MaterialInfoBuilder(int tier,boolean isHidden,int sortOrder,boolean craftable,Builder parent){
                 this.tier = tier;
                 this.isHidden = isHidden;
@@ -235,6 +253,10 @@ public class SimpleMaterialObject {
             }
             public MaterialInfoBuilder setOriginal(){
                 this.isOriginal = true;
+                return this;
+            }
+            public MaterialInfoBuilder setExcludeFromAncients(){
+                this.excludeFromTool = true;
                 return this;
             }
             public MaterialInfoBuilder setCompatModId(String id){
@@ -248,7 +270,7 @@ public class SimpleMaterialObject {
                 return new MaterialModifiersObjectBuilder(this);
             }
             public Builder build(){
-                 parent.materialInfo = new MaterialInfo(this.tier,this.isHidden,this.sortOrder,this.craftable,
+                 parent.materialInfo = new MaterialInfo(this.excludeFromTool,this.tier,this.isHidden,this.sortOrder,this.craftable,
                         this.stats,this.modifiers,this.isOriginal,this.compatModId);
                  return parent;
             }
@@ -298,7 +320,28 @@ public class SimpleMaterialObject {
             }
         }
     }
-    public static class MaterialSpriteInfo {
+    public static class MaterialSpriteInfo{
+        @Getter
+        private final ResourceLocation texture;
+        @Getter
+        private final String[] fallbacks;
+        @Getter
+        private final Set<MaterialStatsId> supportedStats;
+        @Getter
+        @Nullable
+        private final ISpriteTransformer transformer;
+        @Getter
+        private boolean variant = false;
+
+        public MaterialSpriteInfo(ResourceLocation texture, String[] fallbacks, Set<MaterialStatsId> supportedStats, @Nullable ISpriteTransformer transformer,boolean variant) {
+            this.texture = texture;
+            this.fallbacks = fallbacks;
+            this.supportedStats = supportedStats;
+            this.transformer = transformer;
+            this.variant = variant;
+        }
+    }
+    public static class MaterialSpriteInfoBuilder {
         private static final String[] EMPTY_STRING_ARRAY = new String[0];
         private final ResourceLocation texture;
         private String[] fallbacks = EMPTY_STRING_ARRAY;
@@ -310,62 +353,62 @@ public class SimpleMaterialObject {
         @Setter
         private boolean variant = false;
 
-        public MaterialSpriteInfo(ResourceLocation texture, Builder parent) {
+        public MaterialSpriteInfoBuilder(ResourceLocation texture, Builder parent) {
             this.texture = texture;
             this.parent = parent;
         }
 
-        public MaterialSpriteInfo fallbacks(String... fallbacks) {
+        public MaterialSpriteInfoBuilder fallbacks(String... fallbacks) {
             this.fallbacks = fallbacks;
             return this;
         }
 
-        public MaterialSpriteInfo colorMapper(IColorMapping mapping) {
+        public MaterialSpriteInfoBuilder colorMapper(IColorMapping mapping) {
             this.setTransformer(new RecolorSpriteTransformer(mapping));
             return this;
         }
 
-        public MaterialSpriteInfo variant() {
+        public MaterialSpriteInfoBuilder variant() {
             this.setVariant(true);
             return this;
         }
 
-        public MaterialSpriteInfo statType(MaterialStatsId statsId) {
+        public MaterialSpriteInfoBuilder statType(MaterialStatsId statsId) {
             statTypes.add(statsId);
             return this;
         }
 
-        public MaterialSpriteInfo statType(MaterialStatsId... statsId) {
+        public MaterialSpriteInfoBuilder statType(MaterialStatsId... statsId) {
             statTypes.add(statsId);
             return this;
         }
 
-        public MaterialSpriteInfo statType(IMaterialStats... stats) {
+        public MaterialSpriteInfoBuilder statType(IMaterialStats... stats) {
             for (IMaterialStats stat : stats) {
                 statTypes.add(stat.getIdentifier());
             }
             return this;
         }
 
-        public MaterialSpriteInfo statType(MaterialStatType<?>... stats) {
+        public MaterialSpriteInfoBuilder statType(MaterialStatType<?>... stats) {
             for (MaterialStatType<?> stat : stats) {
                 statTypes.add(stat.getId());
             }
             return this;
         }
 
-        public MaterialSpriteInfo statType(List<? extends MaterialStatType<?>> stats) {
+        public MaterialSpriteInfoBuilder statType(List<? extends MaterialStatType<?>> stats) {
             for (MaterialStatType<?> stat : stats) {
                 statTypes.add(stat.getId());
             }
             return this;
         }
 
-        public MaterialSpriteInfo repairKit() {
+        public MaterialSpriteInfoBuilder repairKit() {
             return statType(StatlessMaterialStats.REPAIR_KIT.getIdentifier());
         }
 
-        public MaterialSpriteInfo meleeHarvest() {
+        public MaterialSpriteInfoBuilder meleeHarvest() {
             statType(HeadMaterialStats.ID);
             statType(HandleMaterialStats.ID);
             statType(StatlessMaterialStats.BINDING.getIdentifier());
@@ -373,27 +416,27 @@ public class SimpleMaterialObject {
             return this;
         }
 
-        public MaterialSpriteInfo ranged() {
+        public MaterialSpriteInfoBuilder ranged() {
             statType(LimbMaterialStats.ID);
             statType(GripMaterialStats.ID);
             repairKit();
             return this;
         }
 
-        public MaterialSpriteInfo maille() {
+        public MaterialSpriteInfoBuilder maille() {
             statType(StatlessMaterialStats.MAILLE.getIdentifier());
             statType(TinkerPartSpriteProvider.ARMOR_MAILLE);
             return this;
         }
 
-        public MaterialSpriteInfo cuirass() {
+        public MaterialSpriteInfoBuilder cuirass() {
             statType(StatlessMaterialStats.CUIRASS.getIdentifier());
             statType(TinkerPartSpriteProvider.ARMOR_CUIRASS);
             repairKit(); // used by traveler's gear
             return this;
         }
 
-        public MaterialSpriteInfo plating() {
+        public MaterialSpriteInfoBuilder plating() {
             statType(TinkerPartSpriteProvider.ARMOR_PLATING);
             for (MaterialStatType<?> type : PlatingMaterialStats.TYPES) {
                 statType(type.getId());
@@ -402,34 +445,34 @@ public class SimpleMaterialObject {
             return this;
         }
 
-        public MaterialSpriteInfo armor() {
+        public MaterialSpriteInfoBuilder armor() {
             plating();
             maille();
             return this;
         }
 
-        public MaterialSpriteInfo shieldCore() {
+        public MaterialSpriteInfoBuilder shieldCore() {
             statType(StatlessMaterialStats.SHIELD_CORE);
             repairKit(); // used by traveler's shields
             return this;
         }
 
-        public MaterialSpriteInfo arrowHead() {
+        public MaterialSpriteInfoBuilder arrowHead() {
             statType(StatlessMaterialStats.ARROW_HEAD);
             return this;
         }
 
-        public MaterialSpriteInfo arrowShaft() {
+        public MaterialSpriteInfoBuilder arrowShaft() {
             statType(StatlessMaterialStats.ARROW_SHAFT);
             return this;
         }
 
-        public MaterialSpriteInfo fletching() {
+        public MaterialSpriteInfoBuilder fletching() {
             statType(StatlessMaterialStats.FLETCHING);
             return this;
         }
 
-        private Builder build() {
+        public Builder build() {
             if (transformer == null) {
                 throw new IllegalStateException("Material must have a transformer for a sprite provider");
             }
@@ -437,7 +480,7 @@ public class SimpleMaterialObject {
             if (supportedStats.isEmpty()) {
                 throw new IllegalStateException("Material must support at least one stat type");
             }
-            this.parent.spriteInfo = this;
+            this.parent.spriteInfo = new MaterialSpriteInfo(this.texture,this.fallbacks,supportedStats,this.transformer,this.variant);
             return this.parent;
         }
     }
@@ -462,6 +505,8 @@ public class SimpleMaterialObject {
         private final int requiredValue;
         @Getter
         private final List<AlloyRecipeBuilder> alloyRecipes = new ArrayList<>();
+        @Getter
+        private final List<AbstractRecipeBuilder<?>> extraMaterials = new ArrayList<>();
         @Getter
         private final boolean isBasin;
 
@@ -510,6 +555,58 @@ public class SimpleMaterialObject {
         }
         public MaterialRecipeInfo addAlloyRecipes(AlloyRecipeBuilder... alloyRecipeBuilders){
             this.alloyRecipes.addAll(Arrays.stream(alloyRecipeBuilders).toList());
+            return this;
+        }
+        public MaterialRecipeInfo addExtraMaterials(MaterialRecipeBuilder... materialRecipeBuilders){
+            this.extraMaterials.addAll(Arrays.stream(materialRecipeBuilders).toList());
+            return this;
+        }
+        public MaterialRecipeInfo addMetalNugget(@Nullable TagKey<Item> itemTag, @Nullable Supplier<Item> supplier, SimpleMaterialObject object){
+            if (itemTag==null&&supplier==null) return this;
+            var itemIng = itemTag==null?Ingredient.of(supplier.get()):Ingredient.of(itemTag);
+            this.extraMaterials.add(
+                    MaterialRecipeBuilder.materialRecipe(object.getMaterialId()).setNeeded(9)
+                            .setValue(1).setIngredient(itemIng)
+            );
+            if (this.hasMolten()){
+                this.extraMaterials.add(
+                        MeltingRecipeBuilder.melting(itemIng,
+                                fluidPair.getA().map(fluidTagKey -> FluidOutput.fromTag(fluidTagKey,10))
+                                .orElseGet(() -> FluidOutput.fromFluid(fluidPair.getB().get(),10))
+                                ,getMeltTemp(),1f)
+                );
+                this.extraMaterials.add(
+                        ItemCastingRecipeBuilder.tableRecipe(itemTag==null?ItemOutput.fromItem(supplier.get()):ItemOutput.fromTag(itemTag))
+                                .setCoolingTime(getMeltTemp(),10).setFluid(getFluidIng())
+                                .setCast(TinkerSmeltery.nuggetCast.getMultiUseTag(),false)
+                );
+                this.extraMaterials.add(
+                        ItemCastingRecipeBuilder.tableRecipe(itemTag==null?ItemOutput.fromItem(supplier.get()):ItemOutput.fromTag(itemTag))
+                                .setCoolingTime(getMeltTemp(),10).setFluid(getFluidIng())
+                                .setCast(TinkerSmeltery.nuggetCast.getSingleUseTag(),false)
+                );
+            }
+            return this;
+        }
+        public MaterialRecipeInfo addMetalBlock(@Nullable TagKey<Item> itemTag, @Nullable Supplier<Item> supplier, SimpleMaterialObject object){
+            if (itemTag==null&&supplier==null) return this;
+            var itemIng = itemTag==null?Ingredient.of(supplier.get()):Ingredient.of(itemTag);
+            this.extraMaterials.add(
+                    MaterialRecipeBuilder.materialRecipe(object.getMaterialId()).setNeeded(1)
+                            .setValue(9).setIngredient(itemIng).setLeftover(getItemOutput())
+            );
+            if (this.hasMolten()){
+                this.extraMaterials.add(
+                        MeltingRecipeBuilder.melting(itemIng,
+                                fluidPair.getA().map(fluidTagKey -> FluidOutput.fromTag(fluidTagKey,810))
+                                        .orElseGet(() -> FluidOutput.fromFluid(fluidPair.getB().get(),810))
+                                ,getMeltTemp(),1f)
+                );
+                this.extraMaterials.add(
+                        ItemCastingRecipeBuilder.basinRecipe(itemTag==null?ItemOutput.fromItem(supplier.get()):ItemOutput.fromTag(itemTag))
+                                .setCoolingTime(getMeltTemp(),810).setFluid(getFluidIng())
+                );
+            }
             return this;
         }
         public static class MaterialRecipeInfoBuilder{
@@ -630,6 +727,11 @@ public class SimpleMaterialObject {
             this.itemName = name+"_ingot";
             return this;
         }
+        public Builder commonCompat(){
+            this.conditions.clear();
+            this.conditions.add(new CompatConfigCondition(TinkersAdvanced.MODID,false));
+            return this.setOriginal(false);
+        }
         public Builder noCompat(){
             this.conditions.clear();
             this.conditions.add(new CompatConfigCondition(TinkersAdvanced.MODID,true));
@@ -652,14 +754,14 @@ public class SimpleMaterialObject {
         }
         public Builder registerBurningFluid(int temp,boolean gas,int lightLevel,int burnTime,int damage){
             this.fluidRegFunction = builder -> {
-                builder.type(hot(name,temp,gas)).bucket().block(createBurning(MapColor.COLOR_GRAY,lightLevel,burnTime,damage)).commonTag();
+                builder.type(hot(fluidName,temp,gas)).bucket().block(createBurning(MapColor.COLOR_GRAY,lightLevel,burnTime,damage)).commonTag();
                 return gas?builder.invertedFlowing():builder.flowing();
             };
             return this;
         }
         public Builder registerFluid(int temp,boolean gas,Function<Supplier<? extends FlowingFluid>, LiquidBlock> blockFunction){
             this.fluidRegFunction = builder -> {
-                builder.type(hot(name,temp,gas)).bucket().block(blockFunction).commonTag();
+                builder.type(hot(fluidName,temp,gas)).bucket().block(blockFunction).commonTag();
                 return gas?builder.invertedFlowing():builder.flowing();
             };
             return this;
@@ -679,11 +781,15 @@ public class SimpleMaterialObject {
         public MaterialInfo.MaterialInfoBuilder buildMaterial(int tier,boolean isHidden,int sortOrder,boolean craftable){
             return new MaterialInfo.MaterialInfoBuilder(tier,isHidden,sortOrder,craftable,this);
         }
-        public MaterialSpriteInfo buildMaterialSprite(){
-            return new MaterialSpriteInfo(new MaterialId(nameSpace,name),this);
+        public MaterialSpriteInfoBuilder buildMaterialSprite(){
+            return new MaterialSpriteInfoBuilder(new MaterialId(nameSpace,name),this);
         }
         public Builder setRenderInfo(MaterialRenderInfo info){
             this.renderInfo = info;
+            return this;
+        }
+        public Builder setRenderInfo(Function<MaterialId,MaterialRenderInfo> function){
+            this.renderInfo = function.apply(new MaterialId(nameSpace,name));
             return this;
         }
         public SimpleMaterialObject build(){

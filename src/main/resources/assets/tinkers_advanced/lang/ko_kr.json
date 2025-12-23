@@ -1,0 +1,18 @@
+{
+  "itemGroup.tinkers_advanced.tiac_misc": "팅커스 어드벤스드 아이템",
+
+  "tooltip.tinkers_advanced.material_story": "Shift를 눌러 자세히 보기...",
+  "tooltip.tinkers_advanced.material_banned": "이 물질은 얻을 수 없습니다!",
+  "info.tinkers_advanced.hidden_material": "이 숨겨진 물질은 정상적인 방법으로는 구할 수 없기에, 레시피를 찾을 수 없습니다. Shift를 누르고 특정 퍼즐을 풀어야합니다. 만약 작동하지 않으면 절대 못 구하겠네요. 아쉬워라 ^오^",
+
+  "item.tinkers_advanced.ultra_dense_book": "초 고밀도 책",
+  "tooltip.tinkers_advanced.ultra_dense_book1": "책이 단단한걸까, 아니면 단단한 책일까? 몰?루",
+  "tooltip.tinkers_advanced.ultra_dense_book2": "-팅커스 어드벤스드 가이드 북-",
+
+  "tooltip.tinkers_advanced.energy": "최대 에너지: ",
+  "tooltip.tinkers_advanced.power_multiplier": "파워 증폭기: ",
+  "tool_stat.tinkers_advanced.flux_core.capacity_factor.description": "기본 용량에 곱해질 최대 에너지 배율",
+  "tool_stat.tinkers_advanced.flux_core.generate_factor.description": "에너지 모듈의 생성/소비 양",
+  "tool_stat.tinkers_advanced.capacity_factor": "최대 에너지",
+  "tool_stat.tinkers_advanced.generate_factor": "파워 증폭기"
+}

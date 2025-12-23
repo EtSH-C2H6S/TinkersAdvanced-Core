@@ -9,5 +9,17 @@
   "tooltip.tinkers_advanced.material_story": "Press Shift to reveal more...",
   "tooltip.tinkers_advanced.material_banned": "This material is not obtainable!",
 
-  "info.tinkers_advanced.hidden_material": "Hidden materials can't be crafted normally, That's why you can't find it's recipe.You need to hold shift and solve the puzzle given. If shift is not working, The material might be banned and you can never obtain it, sad :("
+  "info.tinkers_advanced.hidden_material": "Hidden materials can't be crafted normally, That's why you can't find it's recipe.You need to hold shift and solve the puzzle given. If shift is not working, The material might be banned and you can never obtain it, sad :(",
+
+
+  "tooltip.tinkers_advanced.energy": "Max Energy: ",
+  "tooltip.tinkers_advanced.power_multiplier": "Power Multiplier: ",
+  "tool_stat.tinkers_advanced.flux_core.capacity_factor.description": "Max Energy multiplier that will be multiplied to the base capacity.",
+  "tool_stat.tinkers_advanced.flux_core.generate_factor.description": "The generate/consumption rate for Energy Module traits.",
+  "tool_stat.tinkers_advanced.capacity_factor": "Max Energy",
+  "tool_stat.tinkers_advanced.generate_factor": "Power Multiplier",
+
+  "modifier.tinkers_advanced.plasma_proof_goggles": "Plasma Proof Goggles",
+  "modifier.tinkers_advanced.plasma_proof_goggles.flavor": "Swimming goggles designed for Lava.",
+  "modifier.tinkers_advanced.plasma_proof_goggles.description": "Remove fluid mist and fire screen effect when worn as helmet."
 }
