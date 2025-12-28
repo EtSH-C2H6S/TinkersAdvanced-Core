@@ -30,8 +30,13 @@ public class CompatConfigCondition implements ICondition {
 
     @Override
     public boolean test(IContext context) {
-        return isOriginal?!TiAcCrConfig.COMMON.LIST_BLACKLIST_COMPAT_ORIGINAL.get().contains(modId):
-                !TiAcCrConfig.COMMON.LIST_BLACKLIST_COMPAT.get().contains(modId);
+        return isOriginal?
+                (!TiAcCrConfig.COMMON.LIST_BLACKLIST_COMPAT_ORIGINAL.get().contains(modId)&&
+                        TiAcCrConfig.COMMON.LIST_WHITELIST_COMPAT_ORIGINAL.get().isEmpty())||
+                        TiAcCrConfig.COMMON.LIST_WHITELIST_COMPAT_ORIGINAL.get().contains(modId):
+                (!TiAcCrConfig.COMMON.LIST_BLACKLIST_COMPAT.get().contains(modId)&&
+                        TiAcCrConfig.COMMON.LIST_WHITELIST_COMPAT.get().isEmpty())||
+                TiAcCrConfig.COMMON.LIST_WHITELIST_COMPAT.get().contains(modId);
     }
     private static class CompatSerializer implements Serializer<CompatConfigCondition>, IConditionSerializer<CompatConfigCondition> {
         @Override
