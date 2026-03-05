@@ -70,7 +70,7 @@ public class TiAcCrConfig {
             ALLOW_GENERAL_MATERIALS = builder.comment("启用TiAc的通用材料，这些材料通常伴随多个联动模组，具有比联动材料略低的强度，默认true。")
                     .comment("这是一个总控，用于进行全局开关。如果你想精准控制各种联动材料的开关请使用GeneralMaterialBL或GeneralMaterialWL。")
                     .comment("Toggle original materials (Slightly OP), true by default.")
-                    .define("AllowOriginalMaterials",true);
+                    .define("AllowGeneralMaterials",true);
             LIST_BLACKLIST_GENERAL = builder.comment("通用材料黑名单，填材料名(比如塑料就是plastic)。")
                     .comment("General material name blacklist.")
                     .defineListAllowEmpty("GeneralMaterialNameBL", List.of("name1","name2"), Objects::nonNull);

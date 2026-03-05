@@ -17,4 +17,5 @@ public class TiAcCrParticleTypes {
 
     public static final RegistryObject<ParticleType<SimpleParticleType>> ELECTRIC = PARTICLES.register("electric", ()->new SimpleParticleType(false));
     public static final RegistryObject<ParticleType<SimpleParticleType>> SPARK_BLUE = PARTICLES.register("spark_blue", ()->new SimpleParticleType(false));
+    public static final RegistryObject<ParticleType<SimpleParticleType>> LIGHTNING_ARC = PARTICLES.register("lightning_arc", ()->new SimpleParticleType(false));
 }

@@ -34,6 +34,7 @@ import net.minecraftforge.registries.RegistryObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import oshi.util.tuples.Pair;
+import slimeknights.mantle.recipe.condition.TagFilledCondition;
 import slimeknights.mantle.recipe.data.AbstractRecipeBuilder;
 import slimeknights.mantle.recipe.data.IRecipeHelper;
 import slimeknights.mantle.recipe.helper.FluidOutput;
@@ -42,14 +43,12 @@ import slimeknights.mantle.recipe.ingredient.FluidIngredient;
 import slimeknights.mantle.registration.deferred.FluidDeferredRegister;
 import slimeknights.mantle.registration.object.FluidObject;
 import slimeknights.mantle.registration.object.ItemObject;
-import slimeknights.tconstruct.common.TinkerTags;
 import slimeknights.tconstruct.common.registration.CastItemObject;
 import slimeknights.tconstruct.library.client.data.spritetransformer.IColorMapping;
 import slimeknights.tconstruct.library.client.data.spritetransformer.ISpriteTransformer;
 import slimeknights.tconstruct.library.client.data.spritetransformer.RecolorSpriteTransformer;
 import slimeknights.tconstruct.library.client.materials.MaterialRenderInfo;
 import slimeknights.tconstruct.library.materials.definition.MaterialId;
-import slimeknights.tconstruct.library.materials.definition.MaterialVariantId;
 import slimeknights.tconstruct.library.materials.stats.IMaterialStats;
 import slimeknights.tconstruct.library.materials.stats.MaterialStatType;
 import slimeknights.tconstruct.library.materials.stats.MaterialStatsId;
@@ -136,26 +135,27 @@ public class SimpleMaterialObject {
         if (this.recipeInfo==null) return;
         Consumer<FinishedRecipe> withCondition = helper.withCondition(consumer,condition);
         if (recipeInfo.hasMolten()&&recipeInfo.hasItem()){
+            var con = recipeInfo.hasItemTag()? helper.withCondition(consumer,new AndCondition(condition,new TagFilledCondition<>(recipeInfo.getItemPair().getA().get()))):withCondition;
             MeltingRecipeBuilder.melting(recipeInfo.getItemIng(), recipeInfo.getFluidOutput(),recipeInfo.getMeltTemp(),1f)
-                    .save(withCondition,new ResourceLocation(getFolder()+"_melting_"+recipeInfo.getFluidAmount()+"mb"));
+                    .save(con,new ResourceLocation(getFolder()+"_melting_"+recipeInfo.getFluidAmount()+"mb"));
             recipeInfo.getCastItemOptional().ifPresentOrElse(castItemObject -> {
 
                 var recipeBuilder = recipeInfo.isBasin ? ItemCastingRecipeBuilder.basinRecipe(recipeInfo.getItemOutput()) :
                         ItemCastingRecipeBuilder.tableRecipe(recipeInfo.getItemOutput());
                 recipeBuilder.setCast(castItemObject.getMultiUseTag(), false)
                         .setFluid(recipeInfo.getFluidIng()).setCoolingTime(recipeInfo.meltTemp, recipeInfo.fluidAmount)
-                        .save(withCondition, new ResourceLocation(getFolder() + "_casting_multi_" + recipeInfo.getFluidAmount() + "mb"));
+                        .save(con, new ResourceLocation(getFolder() + "_casting_multi_" + recipeInfo.getFluidAmount() + "mb"));
 
                 recipeBuilder = recipeInfo.isBasin ? ItemCastingRecipeBuilder.basinRecipe(recipeInfo.getItemOutput()) :
                         ItemCastingRecipeBuilder.tableRecipe(recipeInfo.getItemOutput());
                 recipeBuilder.setCast(castItemObject.getSingleUseTag(), true)
                         .setFluid(recipeInfo.getFluidIng()).setCoolingTime(recipeInfo.meltTemp, recipeInfo.fluidAmount)
-                        .save(withCondition, new ResourceLocation(getFolder() + "_casting_single_" + recipeInfo.getFluidAmount() + "mb"));
+                        .save(con, new ResourceLocation(getFolder() + "_casting_single_" + recipeInfo.getFluidAmount() + "mb"));
             },()->{
                 var recipeBuilder = recipeInfo.isBasin?ItemCastingRecipeBuilder.basinRecipe(recipeInfo.getItemOutput()):
                         ItemCastingRecipeBuilder.tableRecipe(recipeInfo.getItemOutput());
                 recipeBuilder.setFluid(recipeInfo.getFluidIng()).setCoolingTime(recipeInfo.meltTemp, recipeInfo.fluidAmount)
-                        .save(withCondition, new ResourceLocation(getFolder()+"_casting_none_"+recipeInfo.getFluidAmount()+"mb"));
+                        .save(con, new ResourceLocation(getFolder()+"_casting_none_"+recipeInfo.getFluidAmount()+"mb"));
             });
             if (isUnit) {
                 MaterialMeltingRecipeBuilder.material(getMaterialId(), recipeInfo.getMeltTemp(), recipeInfo.getFluidOutput())
@@ -173,15 +173,24 @@ public class SimpleMaterialObject {
             builder.save(withCondition,
                     new ResourceLocation(getFolder() + "_material_" + recipeInfo.getMaterialValue() + recipeInfo.getRequiredValue()));
             int id = 1;
-            for (var materialRecipe:recipeInfo.extraMaterials){
-                materialRecipe.save(withCondition,
+            for (var materialRecipe:recipeInfo.extraMaterials.keySet()){
+                Consumer<FinishedRecipe> con;
+                if (recipeInfo.extraMaterials.get(materialRecipe)!=null)
+                    con = helper.withCondition(consumer,new AndCondition(condition,recipeInfo.extraMaterials.get(materialRecipe)));
+                else con = withCondition;
+                materialRecipe.save(con,
                         new ResourceLocation(getFolder() + "_material_extra_" + id));
                 id++;
             }
         }
-        for (int i =0;i<recipeInfo.alloyRecipes.size();i++){
-            var alloyRecipeBuilder = recipeInfo.alloyRecipes.get(i);
-            alloyRecipeBuilder.save(withCondition, new ResourceLocation(getFolder() + "_material_alloy_"+i));
+        int id = 1;
+        for (var alloyRecipe:recipeInfo.alloyRecipes.keySet()){
+            Consumer<FinishedRecipe> con;
+            if (recipeInfo.alloyRecipes.get(alloyRecipe)!=null)
+                con = helper.withCondition(consumer,new AndCondition(condition,recipeInfo.alloyRecipes.get(alloyRecipe)));
+            else con = withCondition;
+            alloyRecipe.save(con, new ResourceLocation(getFolder() + "_material_alloy_"+id));
+            id++;
         }
     }
 
@@ -508,9 +517,9 @@ public class SimpleMaterialObject {
         @Getter
         private final int requiredValue;
         @Getter
-        private final List<AlloyRecipeBuilder> alloyRecipes = new ArrayList<>();
+        private final Map<AlloyRecipeBuilder,ICondition> alloyRecipes = new HashMap<>();
         @Getter
-        private final List<AbstractRecipeBuilder<?>> extraMaterials = new ArrayList<>();
+        private final Map<AbstractRecipeBuilder<?>,ICondition> extraMaterials = new HashMap<>();
         @Getter
         private final boolean isBasin;
 
@@ -561,6 +570,9 @@ public class SimpleMaterialObject {
         public boolean hasMolten(){
             return fluidPair.getA().isPresent()||fluidPair.getB().get()!=null;
         }
+        public boolean hasItemTag(){
+            return itemPair.getA().isPresent();
+        }
         public boolean hasItem(){
             return itemPair.getA().isPresent()||itemPair.getB()!=null;
         }
@@ -568,33 +580,36 @@ public class SimpleMaterialObject {
             return leftOverPair.getA().isPresent()||leftOverPair.getB()!=null;
         }
         public MaterialRecipeInfo addAlloyRecipes(AlloyRecipeBuilder... alloyRecipeBuilders){
-            this.alloyRecipes.addAll(Arrays.stream(alloyRecipeBuilders).toList());
+            Arrays.stream(alloyRecipeBuilders).forEach(builder->this.alloyRecipes.put(builder,null));
             return this;
         }
         public MaterialRecipeInfo addExtraMaterials(MaterialRecipeBuilder... materialRecipeBuilders){
-            this.extraMaterials.addAll(Arrays.stream(materialRecipeBuilders).toList());
+            Arrays.stream(materialRecipeBuilders).forEach(builder->this.extraMaterials.put(builder,null));
             return this;
         }
         public MaterialRecipeInfo addMetalNugget(@Nullable TagKey<Item> itemTag, @Nullable Supplier<Item> supplier, SimpleMaterialObject object,boolean alreadyHasMoltenRecipes){
             if (itemTag==null&&supplier==null) return this;
             var itemIng = itemTag==null?Ingredient.of(supplier.get()):Ingredient.of(itemTag);
-            this.extraMaterials.add(
+            this.extraMaterials.put(
                     MaterialRecipeBuilder.materialRecipe(object.getMaterialId()).setNeeded(9)
-                            .setValue(1).setIngredient(itemIng)
+                            .setValue(1).setIngredient(itemIng),itemTag!=null? new TagFilledCondition<>(itemTag):null
             );
             if (this.hasMolten()&&!alreadyHasMoltenRecipes){
-                this.extraMaterials.add(
-                        MeltingRecipeBuilder.melting(itemIng, getFluidOutput(10),getMeltTemp(),1f)
+                this.extraMaterials.put(
+                        MeltingRecipeBuilder.melting(itemIng, getFluidOutput(10),getMeltTemp(),1f),
+                        itemTag!=null? new TagFilledCondition<>(itemTag):null
                 );
-                this.extraMaterials.add(
+                this.extraMaterials.put(
                         ItemCastingRecipeBuilder.tableRecipe(itemTag==null?ItemOutput.fromItem(supplier.get()):ItemOutput.fromTag(itemTag))
                                 .setCoolingTime(getMeltTemp(),10).setFluid(getFluidIng(10))
-                                .setCast(TinkerSmeltery.nuggetCast.getMultiUseTag(),false)
+                                .setCast(TinkerSmeltery.nuggetCast.getMultiUseTag(),false),
+                        itemTag!=null? new TagFilledCondition<>(itemTag):null
                 );
-                this.extraMaterials.add(
+                this.extraMaterials.put(
                         ItemCastingRecipeBuilder.tableRecipe(itemTag==null?ItemOutput.fromItem(supplier.get()):ItemOutput.fromTag(itemTag))
                                 .setCoolingTime(getMeltTemp(),10).setFluid(getFluidIng(10))
-                                .setCast(TinkerSmeltery.nuggetCast.getSingleUseTag(),true)
+                                .setCast(TinkerSmeltery.nuggetCast.getSingleUseTag(),true),
+                        itemTag!=null? new TagFilledCondition<>(itemTag):null
                 );
             }
             return this;
@@ -602,70 +617,80 @@ public class SimpleMaterialObject {
         public MaterialRecipeInfo addMetalBlock(@Nullable TagKey<Item> itemTag, @Nullable Supplier<Item> supplier, SimpleMaterialObject object,boolean alreadyHasMoltenRecipes){
             if (itemTag==null&&supplier==null) return this;
             var itemIng = itemTag==null?Ingredient.of(supplier.get()):Ingredient.of(itemTag);
-            this.extraMaterials.add(
+            this.extraMaterials.put(
                     MaterialRecipeBuilder.materialRecipe(object.getMaterialId()).setNeeded(1)
-                            .setValue(9).setIngredient(itemIng).setLeftover(getItemOutput())
+                            .setValue(9).setIngredient(itemIng).setLeftover(getItemOutput()),
+                    itemTag!=null? new TagFilledCondition<>(itemTag):null
             );
             if (this.hasMolten()&&!alreadyHasMoltenRecipes){
-                this.extraMaterials.add(
-                        MeltingRecipeBuilder.melting(itemIng, getFluidOutput(810),getMeltTemp(),1f)
+                this.extraMaterials.put(
+                        MeltingRecipeBuilder.melting(itemIng, getFluidOutput(810),getMeltTemp(),1f),
+                        itemTag!=null? new TagFilledCondition<>(itemTag):null
                 );
-                this.extraMaterials.add(
+                this.extraMaterials.put(
                         ItemCastingRecipeBuilder.basinRecipe(itemTag==null?ItemOutput.fromItem(supplier.get()):ItemOutput.fromTag(itemTag))
-                                .setCoolingTime(getMeltTemp(),810).setFluid(getFluidIng(810))
+                                .setCoolingTime(getMeltTemp(),810).setFluid(getFluidIng(810)),
+                        itemTag!=null? new TagFilledCondition<>(itemTag):null
                 );
             }
             return this;
         }
         public MaterialRecipeInfo addGeneralRecipes(String name){
             if (this.hasMolten()){
-                this.extraMaterials.add(
-                        MeltingRecipeBuilder.melting(Ingredient.of(forgeTag(IngredientForm.dusts,name)),
+                this.extraMaterials.put(
+                        MeltingRecipeBuilder.melting(Ingredient.of(forgeTag(IngredientForm.dust,name)),
                                 fluidPair.getA().map(fluidTagKey -> FluidOutput.fromTag(fluidTagKey,90))
                                         .orElseGet(() -> FluidOutput.fromFluid(fluidPair.getB().get(),90))
-                                ,getMeltTemp(),1f)
+                                ,getMeltTemp(),1f),
+                        new TagFilledCondition<>(forgeTag(IngredientForm.dust,name))
                 );
-                this.extraMaterials.add(
-                        MeltingRecipeBuilder.melting(Ingredient.of(forgeTag(IngredientForm.plates,name)),
+                this.extraMaterials.put(
+                        MeltingRecipeBuilder.melting(Ingredient.of(forgeTag(IngredientForm.plate,name)),
                                 fluidPair.getA().map(fluidTagKey -> FluidOutput.fromTag(fluidTagKey,90))
                                         .orElseGet(() -> FluidOutput.fromFluid(fluidPair.getB().get(),90))
-                                ,getMeltTemp(),1f)
+                                ,getMeltTemp(),1f),
+                        new TagFilledCondition<>(forgeTag(IngredientForm.plate,name))
                 );
-                this.extraMaterials.add(
-                        MeltingRecipeBuilder.melting(Ingredient.of(forgeTag(IngredientForm.gears,name)),
+                this.extraMaterials.put(
+                        MeltingRecipeBuilder.melting(Ingredient.of(forgeTag(IngredientForm.gear,name)),
                                 fluidPair.getA().map(fluidTagKey -> FluidOutput.fromTag(fluidTagKey,90))
                                         .orElseGet(() -> FluidOutput.fromFluid(fluidPair.getB().get(),90))
-                                ,getMeltTemp(),1f)
+                                ,getMeltTemp(),1f),
+                        new TagFilledCondition<>(forgeTag(IngredientForm.gear,name))
                 );
 
-                this.extraMaterials.add(
-                        ItemCastingRecipeBuilder.tableRecipe(ItemOutput.fromTag(forgeTag(IngredientForm.plates,name)))
+                this.extraMaterials.put(
+                        ItemCastingRecipeBuilder.tableRecipe(ItemOutput.fromTag(forgeTag(IngredientForm.plate,name)))
                                 .setCoolingTime(getMeltTemp(),90).setFluid(getFluidIng(90))
-                                .setCast(castTag(IngredientForm.plates,true),false)
+                                .setCast(castTag(IngredientForm.plate,true),false),
+                        new TagFilledCondition<>(forgeTag(IngredientForm.plate,name))
                 );
-                this.extraMaterials.add(
-                        ItemCastingRecipeBuilder.tableRecipe(ItemOutput.fromTag(forgeTag(IngredientForm.plates,name)))
+                this.extraMaterials.put(
+                        ItemCastingRecipeBuilder.tableRecipe(ItemOutput.fromTag(forgeTag(IngredientForm.plate,name)))
                                 .setCoolingTime(getMeltTemp(),90).setFluid(getFluidIng(90))
-                                .setCast(castTag(IngredientForm.plates,false),true)
+                                .setCast(castTag(IngredientForm.plate,false),true),
+                        new TagFilledCondition<>(forgeTag(IngredientForm.plate,name))
                 );
-                this.extraMaterials.add(
-                        ItemCastingRecipeBuilder.tableRecipe(ItemOutput.fromTag(forgeTag(IngredientForm.gears,name)))
+                this.extraMaterials.put(
+                        ItemCastingRecipeBuilder.tableRecipe(ItemOutput.fromTag(forgeTag(IngredientForm.gear,name)))
                                 .setCoolingTime(getMeltTemp(),90).setFluid(getFluidIng(360))
-                                .setCast(castTag(IngredientForm.plates,true),false)
+                                .setCast(castTag(IngredientForm.gear,true),false),
+                        new TagFilledCondition<>(forgeTag(IngredientForm.gear,name))
                 );
-                this.extraMaterials.add(
-                        ItemCastingRecipeBuilder.tableRecipe(ItemOutput.fromTag(forgeTag(IngredientForm.gears,name)))
+                this.extraMaterials.put(
+                        ItemCastingRecipeBuilder.tableRecipe(ItemOutput.fromTag(forgeTag(IngredientForm.gear,name)))
                                 .setCoolingTime(getMeltTemp(),90).setFluid(getFluidIng(360))
-                                .setCast(castTag(IngredientForm.plates,false),true)
+                                .setCast(castTag(IngredientForm.gear,false),true),
+                        new TagFilledCondition<>(forgeTag(IngredientForm.gear,name))
                 );
             }
             return this;
         }
         private static TagKey<Item> forgeTag(IngredientForm form,String name){
-            return TagKey.create(ForgeRegistries.ITEMS.getRegistryKey(),new ResourceLocation("forge",form+"/"+name));
+            return TagKey.create(ForgeRegistries.ITEMS.getRegistryKey(),new ResourceLocation("forge",form+"s/"+name));
         }
         private static TagKey<Item> castTag(IngredientForm form,boolean multi){
-            return TagKey.create(ForgeRegistries.ITEMS.getRegistryKey(),new ResourceLocation("tconstruct","casts"+(multi?"multi_use":"single_use")+"/"+form));
+            return TagKey.create(ForgeRegistries.ITEMS.getRegistryKey(),new ResourceLocation("tconstruct","casts/"+(multi?"multi_use":"single_use")+"/"+form));
         }
         public static class MaterialRecipeInfoBuilder{
             public MaterialRecipeInfoBuilder(SimpleMaterialObject materialObject){
@@ -887,6 +912,6 @@ public class SimpleMaterialObject {
     }
 
     public static enum IngredientForm{
-        nuggets,ingots,storage_blocks,plates,dusts,gears;
+        nugget, ingot,storage_block, plate, dust, gear;
     }
 }

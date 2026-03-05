@@ -19,6 +19,7 @@ import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import org.jetbrains.annotations.NotNull;
@@ -121,5 +122,16 @@ public class CommonUtil {
         f-=i;
         Random random = new Random();
         return i + (random.nextFloat()<f?1:0);
+    }
+
+    public static Vec3 rotateVec3(Vec3 original,Vec3 axis,float deg){
+        if (deg==0) return original;
+        axis = axis.normalize();
+        var rad = Math.toRadians(deg);
+        return original.scale(Math.cos(rad))
+                .add(axis.cross(original)
+                        .scale(Math.sin(rad)))
+                .add(axis.scale(1-Math.cos(rad))
+                        .scale(axis.dot(original)));
     }
 }
